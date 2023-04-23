@@ -1,0 +1,83 @@
+﻿@model Helpers.Models.WebsiteViewModels.JobPostViewModel
+
+@using DAO_WebPortal.Resources
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor httpContextAccessor
+
+
+<div class="card-header cursorp" onclick="GoToJobDetail(@Model.JobID)">
+    <!-- .header -->
+    <div class="titleContainer">
+        <span class="badge bg-primary">#@Model.JobID</span>
+
+        <h5 class="card-title mx-2" title="@Model.Title">@DAO_WebPortal.Utility.StringHelper.ShortenString(Model.Title, 90)</h5>
+        <small class="text-medium-emphasis card-date">@Model.CreateDate.ToShortDateString() , @Model.JobPosterUserName</small>
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.AdminApprovalPending || Model.Status == Helpers.Constants.Enums.JobStatusTypes.DoSFeePending || Model.Status == Helpers.Constants.Enums.JobStatusTypes.KYCPending)
+        {
+            <span class="badge bg-warning float-right mt-1">Pending</span>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.InternalAuction)
+        {
+            <a href="../Auctions" class="badge bg-success float-right mt-1">Internal Auction</a>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.PublicAuction)
+        {
+            <a href="../Auctions" class="badge bg-success float-right mt-1">Public Auction</a>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.AuctionCompleted)
+        {
+            <a href="../Auctions" class="badge bg-primary float-right mt-1">Auction Completed</a>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.InformalVoting)
+        {
+            <a href="../Votings" class="badge bg-success float-right mt-1">Voting</a>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.FormalVoting)
+        {
+            <span href="../Votings" class="badge bg-success float-right mt-1">Voting</span>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.Completed)
+        {
+            <span class="badge bg-success float-right mt-1">Completed</span>
+        }
+
+        @if (Model.Status == Helpers.Constants.Enums.JobStatusTypes.Failed || Model.Status == Helpers.Constants.Enums.JobStatusTypes.Expired || Model.Status == Helpers.Constants.Enums.JobStatusTypes.Rejected || Model.Status == Helpers.Constants.Enums.JobStatusTypes.FailRestart)
+        {
+            <span class="badge bg-danger float-right">@Model.Status.ToString()</span>
+        }
+
+    </div>
+</div><!-- .header -->
+
+
+<!-- Footer -->
+
+    <div class="card-footer">
+
+        <span>                        
+            @if(string.IsNullOrEmpty(Model.Tags)){
+                <small><i>No tags specified.</i></small>
+            }
+            else{
+                <small style="margin-right:10px" class="text-medium-emphasis">Tags / Coding Lang</small>
+                    foreach(var tag in Model.Tags.Split(',')){
+                        <span class="badge bg-secondary me-1">@tag</span>
+                    }
+            }
+        </span>
+            
+    </div> 
+<!-- Footer -->
+
+
+
+
+
+   

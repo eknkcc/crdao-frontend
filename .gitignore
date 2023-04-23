@@ -3,3 +3,10 @@
 ################################################################################
 
 /.vs
+/Helpers/bin/Debug
+/Helpers/obj
+/DAO_WebPortal/bin
+/DAO_WebPortal/obj
+/DAO_WebPortal/Properties
+/DAO_WebPortal/appsettings.Production.json
+/DAO_WebPortal/appsettings.tests.json
