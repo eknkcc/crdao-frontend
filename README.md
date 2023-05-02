@@ -19,7 +19,6 @@ Application is configured to use backend services at "http://18.222.206.248:8896
 -	You will be redirected to the application url using your default browser. <br>
 -	Once the page appeared, you should see a toaster indicating that the activation was successful.<br>
 -	This is required to create a user because the registration process is completed with the activation mail.<br>
--	To activate a user without email registration, the IsActive and KYCStatus columns in the daodb.Users table in the database should be set to 1 manually.<br>
 
 ### Dashboard Page
 -	On this page, you can see the amount of available reputation, the number of jobs you have created, the amount of auctions and votes you have given. <br>
@@ -44,7 +43,6 @@ Application is configured to use backend services at "http://18.222.206.248:8896
 	5- Add the repository address or the code file where the job will be done.<br>
 	6- Need to add a detailed description of the job.<br>
 -	After filling this information, you will press the “Submit Job” button to add a job.<br>
--	You will see 2 conditions. If you accept these, you can create a job by saying "continue".<br>
 -	After creating the job, you can make edits again if you want.<br>
 -	By clicking “Comment”, you can both comment and access previous comments. And you can reply to other comments.<br>
 -	It must be approved by the admin in order to perform the transactions related to the created jobs.<br>
@@ -89,13 +87,6 @@ _If you are a **VotingAssociate**, you can directly recruit._ <br>
 
 
 ## Develop
-All applications can be built and run in their own docker containers with the following command;
-```shell
-docker build -f "./Dockerfile" -t [IMAGE_NAME]:dev "[SolutionPath]\ServicesDAO"
-docker run -p [application access port]:80 -name:[NAME]  [IMAGE_NAME]:dev --
-```
-
-For the application to work, all containers should be created in the same network also database, rabbitmq and api endpoints can be redefined.<br>
 
 After .NET 6 and .NET SDK 6 are installed on the environment, all applications can be built individually by running the commands below under the project solution folder;
 
