@@ -213,11 +213,9 @@ namespace DAO_WebPortal.Controllers
             try
             {
                 //User input controls
-                SimpleResponse controlResult = UserInputControls.ControlPostJobOfferRequest(time, amount);
+                SimpleResponse controlResult = UserInputControls.ControlPostJobOfferRequest(HttpContext.Session.GetString("KYCStatus"), time, amount);
 
                 if (controlResult.Success == false) return base.Json(controlResult);
-
-                time = (long)((dynamic)controlResult.Content).timeframe;
 
                 int userid = Convert.ToInt32(HttpContext.Session.GetInt32("UserID"));
                 string token = HttpContext.Session.GetString("Token");
@@ -233,56 +231,6 @@ namespace DAO_WebPortal.Controllers
                 Program.monitizer.AddException(ex, LogTypes.ApplicationError, true);
                 return Json(new SimpleResponse() { Success = false, Message = "An error occured while processing your request." });
             }
-
-
-            //SimpleResponse result = new SimpleResponse();
-
-            //try
-            //{
-            //    //Empty fields control
-            //    if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(time) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(codeurl) || amount <= 0)
-            //    {
-            //        result.Success = false;
-            //        result.Message = "You must fill all the fields to post a job.";
-            //        return Json(result);
-            //    }
-
-            //    //Create JobPost model
-            //    JobPostDto model = new JobPostDto() { UserID = Convert.ToInt32(HttpContext.Session.GetInt32("UserID")), Amount = amount, JobDescription = description, CreateDate = DateTime.Now, TimeFrame = time, LastUpdate = DateTime.Now, Title = title, Tags = tags, CodeUrl = codeurl, Status = Enums.JobStatusTypes.AdminApprovalPending };
-
-            //    //Post model to ApiGateway
-            //    string jobPostResponseJson = Helpers.Request.Post(Program._settings.Service_ApiGateway_Url + "/Db/JobPost/Post", Helpers.Serializers.SerializeJson(model), HttpContext.Session.GetString("Token"));
-            //    //Parse reponse
-            //    model = Helpers.Serializers.DeserializeJson<JobPostDto>(jobPostResponseJson);
-
-            //    if (model != null && model.JobID > 0)
-            //    {
-            //        result = ApproveJob(model.JobID);
-
-            //        // result.Success = true;
-            //        // result.Message = "Job posted successfully and will be available after admin review.";
-
-            //        result.Content = model;
-
-            //        Program.monitizer.AddUserLog(Convert.ToInt32(HttpContext.Session.GetInt32("UserID")), Helpers.Constants.Enums.UserLogType.Request, "User added a new job. #" + model.JobID, Utility.IpHelper.GetClientIpAddress(HttpContext), Utility.IpHelper.GetClientPort(HttpContext));
-
-
-            //        //Set server side toastr because page will be redirected
-            //        try
-            //        {
-            //            TempData["toastr-message"] = result.Message;
-            //            TempData["toastr-type"] = "success";
-            //        }
-            //        catch (Exception) { }
-
-
-            //        return Json(result);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Program.monitizer.AddException(ex, LogTypes.ApplicationError, true);
-            //}
 
             return Json(new SimpleResponse { Success = false, Message = Lang.ErrorNote });
         }
@@ -2185,6 +2133,69 @@ namespace DAO_WebPortal.Controllers
 
         }
 
+
+        [HttpPost]
+        [AuthorizeChainUser]
+        public JsonResult FinishVoting(int VotingID, string signedDeployJson)
+        {
+            SimpleResponse result = new SimpleResponse();
+
+            try
+            {
+
+                if (Program._settings.DaoBlockchain == Blockchain.Casper)
+                {
+                    ChainActionDto chainAction = CreateChainActionRecord(signedDeployJson, HttpContext.Session.GetString("WalletAddress"), ChainActionTypes.Finish_Voting);
+
+                    int userid = Convert.ToInt32(HttpContext.Session.GetInt32("UserID"));
+                    string token = HttpContext.Session.GetString("Token");
+
+                    new Thread(() =>
+                    {
+                        Thread.CurrentThread.IsBackground = true;
+
+                        ChainActionDto deployResult = new ChainActionDto();
+
+                        deployResult = SendSignedDeploy(chainAction);
+
+                        //Central db operations
+                        if (!string.IsNullOrEmpty(deployResult.DeployHash) && deployResult.Status == Enums.ChainActionStatus.Completed.ToString())
+                        {
+
+                            string jsonResponse = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/Voting/Voting/GetId?id=" + VotingID, token);
+                            VotingDto voting = Helpers.Serializers.DeserializeJson<VotingDto>(jsonResponse);
+                            voting.Status = VoteStatusTypes.BlockchainFinish;
+
+                            string jsonResponse2 = Helpers.Request.Put(Program._settings.Service_ApiGateway_Url + "/Voting/Voting/Update", Helpers.Serializers.SerializeJson(voting), token);
+
+                            //Set server side toastr because page will be redirected
+                            TempData["toastr-message"] = result.Message;
+                            TempData["toastr-type"] = "success";
+
+                            Program.monitizer.AddUserLog(userid, Helpers.Constants.Enums.UserLogType.Request, "User finished voting. Voting #" + VotingID, Utility.IpHelper.GetClientIpAddress(HttpContext), Utility.IpHelper.GetClientPort(HttpContext));
+                        }
+
+                        Program.chainQue.RemoveAt(Program.chainQue.IndexOf(chainAction));
+                        Program.chainQue.Add(deployResult);
+                    }).Start();
+
+                    //Set server side toastr because page will be redirected
+                    TempData["toastr-message"] = "Your request successfully submitted. ";
+                    TempData["toastr-type"] = "success";
+
+                    return Json(new SimpleResponse() { Success = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.monitizer.AddException(ex, LogTypes.ApplicationError, true);
+            }
+
+            return Json(new SimpleResponse { Success = false, Message = Lang.ErrorNote });
+
+        }
+
+
         /// <summary>
         /// New Simple Vote Page
         /// </summary>
@@ -2725,7 +2736,7 @@ namespace DAO_WebPortal.Controllers
                     //Parse response
                     ReputationHistoryModel = Helpers.Serializers.DeserializeJson<List<UserReputationHistoryDto>>(url);
                     ReputationHistoryModel = ReputationHistoryModel.OrderByDescending(x => x.Date).ToList();
-                    HttpContext.Session.SetString("Reputation", (ReputationHistoryModel.First().StakeReleasedAmount + ReputationHistoryModel.First().StakedAmount).ToString());
+                    //HttpContext.Session.SetString("Reputation", (ReputationHistoryModel.First().StakeReleasedAmount + ReputationHistoryModel.First().StakedAmount).ToString());
                 }
                 else
                 {
@@ -3430,19 +3441,6 @@ namespace DAO_WebPortal.Controllers
         }
 
         /// <summary>
-        ///  This view shows global parameters of the DAO
-        /// </summary>
-        /// <returns></returns>
-        [Route("Dao-Variables")]
-        [AuthorizeAdmin]
-        public IActionResult Dao_Variables()
-        {
-            ViewBag.Title = "DAO Variables";
-
-            return View();
-        }
-
-        /// <summary>
         ///  DAO Variables save changes
         /// </summary>
         /// <returns></returns>
@@ -3840,6 +3838,20 @@ namespace DAO_WebPortal.Controllers
             }
 
             return View(model);
+        }
+        #endregion
+
+        #region DAO Variables
+        /// <summary>
+        ///  This view shows global parameters of the DAO
+        /// </summary>
+        /// <returns></returns>
+        [Route("Dao-Variables")]
+        public IActionResult Dao_Variables()
+        {
+            ViewBag.Title = "DAO Variables";
+
+            return View();
         }
         #endregion
 

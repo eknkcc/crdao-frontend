@@ -38,8 +38,8 @@
     <meta name="theme-color" content="#ffffff">
 
     <!-- Main styles for this application-->
-    <link href="~/Home/css/style.css?v=1.0.6" rel="stylesheet" />
-    <link href="~/Home/css/custom.css?v=1.0.9" rel="stylesheet" />
+    <link href="~/Home/css/style.css?v=1.0.8" rel="stylesheet" />
+    <link href="~/Home/css/custom.css?v=1.0.12" rel="stylesheet" />
 
     <!-- Library styles -->
     <link href="~/Home/lib/chartjs/css/coreui-chartjs.css" rel="stylesheet" />
@@ -129,23 +129,32 @@
                 </a>
             </li>
 
-            @if (httpContextAccessor.HttpContext.Session.GetString("UserType") !=
+            @*            @if (httpContextAccessor.HttpContext.Session.GetString("UserType") !=
             Helpers.Constants.Enums.UserIdentityType.Admin.ToString())
             {
-                <li class="nav-item">
-                    <a class="nav-link link-load" href="../Payment-History">
-                        <svg class="nav-icon">
-                            <use xlink:href="/Home/images/svg/free.svg#cil-wallet"></use>
-                        </svg> Payment History
-                    </a>
-                </li>
+            <li class="nav-item">
+            <a class="nav-link link-load" href="../Payment-History">
+            <svg class="nav-icon">
+            <use xlink:href="/Home/images/svg/free.svg#cil-wallet"></use>
+            </svg> Payment History
+            </a>
+            </li>
             }
+            *@
 
             <li class="nav-item">
                 <a class="nav-link link-load" href="../User-Profile">
                     <svg class="nav-icon">
                         <use xlink:href="/Home/images/svg/free.svg#cil-user"></use>
                     </svg> User Profile
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="../Dao-Variables">
+                    <svg class="nav-icon">
+                        <use xlink:href="/Home/images/svg/free.svg#cil-settings"></use>
+                    </svg>DAO Variables
                 </a>
             </li>
 
@@ -176,6 +185,7 @@
                         </svg>Application Logs
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="../Reputation-Logs">
                         <svg class="nav-icon">
@@ -183,13 +193,8 @@
                         </svg>Reputation Logs
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../Dao-Variables">
-                        <svg class="nav-icon">
-                            <use xlink:href="/Home/images/svg/free.svg#cil-settings"></use>
-                        </svg>DAO Variables
-                    </a>
-                </li>
+
+
             }
 
 
@@ -620,7 +625,7 @@
     <script src="~/Home/lib/jquery-confirm/jquery-confirm.js"></script>
     <script src="~/Home/js/sorttable.js"></script>
     <script src="~/Home/lib/ckeditor/ckeditor.js"></script>
-    <script src="~/Home/js/daofunctions.js?v=1.0.6"></script>
+    <script src="~/Home/js/daofunctions.js?v=1.0.7"></script>
     <partial name="../Shared/_SharedFunctionsPartial.cshtml" />
 
     <script>

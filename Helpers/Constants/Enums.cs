@@ -108,7 +108,8 @@
             Active,
             Waiting,
             Completed,
-            Expired
+            Expired,
+            BlockchainFinish
         }
 
         /// <summary>
@@ -201,6 +202,7 @@
             Submit_JobProof_Grace,
 
             Submit_Vote,
+            Finish_Voting,
         }
 
 

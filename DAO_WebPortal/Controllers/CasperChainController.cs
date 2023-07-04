@@ -28,6 +28,7 @@ namespace DAO_WebPortal.Controllers
 {
     public class CasperChainController : Controller
     {
+
         /// <summary>
         ///  User login onchain function
         /// </summary>
@@ -196,7 +197,7 @@ namespace DAO_WebPortal.Controllers
         {
             try
             {
-                SimpleResponse controlResult = UserInputControls.ControlPostJobOfferRequest(timeframe, budget);
+                SimpleResponse controlResult = UserInputControls.ControlPostJobOfferRequest(HttpContext.Session.GetString("KYCStatus"), timeframe, budget);
 
                 if (controlResult.Success == false) return base.Json(controlResult);
 
@@ -230,7 +231,7 @@ namespace DAO_WebPortal.Controllers
                 string deployJson = "";
                 if(HttpContext.Session.GetString("UserType") == Enums.UserIdentityType.VotingAssociate.ToString())
                 {                
-                    deployJson = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/CasperChainService/Contracts/BidEscrowSubmitBidVA?userwallet=" + HttpContext.Session.GetString("WalletAddress") + "&jobofferid=" + jobofferid + "&time=" + timeframe + "&repstake=" + repstake);
+                    deployJson = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/CasperChainService/Contracts/BidEscrowSubmitBidVA?userwallet=" + HttpContext.Session.GetString("WalletAddress") + "&jobofferid=" + jobofferid + "&time=" + timeframe + "&repstake=" + repstake + "&userpayment="+ userpayment * 1000000000);
                 }
                 else
                 {
@@ -368,6 +369,31 @@ namespace DAO_WebPortal.Controllers
 
                 //Get model from ApiGateway
                 var deployJson = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/CasperChainService/Contracts/SubmitVote?votetype=" + voting.Type + "&isFormal=" + Convert.ToInt32(voting.IsFormal) + "&votingid=" + voting.BlockchainVotingID + "&choice=" + Convert.ToInt32(isinfavor) + "&stake=" + stake + "&userwallet=" + HttpContext.Session.GetString("WalletAddress"));
+
+                //Parse response
+                SimpleResponse deployModel = Helpers.Serializers.DeserializeJson<SimpleResponse>(deployJson);
+
+                //Return deploy object in JSON
+                return base.Json(deployModel);
+
+            }
+            catch (Exception ex)
+            {
+                Program.monitizer.AddException(ex, LogTypes.ApplicationError, true);
+                return base.Json(new SimpleResponse { Success = false, Message = Lang.ErrorNote });
+            }
+        }
+        public JsonResult GetFinishVotingDeploy(int votingId)
+        {
+            try
+            {
+                //Get voting model from ApiGateway
+                var votingJson = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/Voting/Voting/GetId?id=" + votingId, HttpContext.Session.GetString("Token"));
+                //Parse response
+                VotingDto voting = Helpers.Serializers.DeserializeJson<VotingDto>(votingJson);
+
+                //Get model from ApiGateway
+                var deployJson = Helpers.Request.Get(Program._settings.Service_ApiGateway_Url + "/CasperChainService/Contracts/FinishVoting?votetype=" + voting.Type + "&isFormal=" + Convert.ToInt32(voting.IsFormal) + "&votingid=" + voting.BlockchainVotingID + "&userwallet=" + HttpContext.Session.GetString("WalletAddress"));
 
                 //Parse response
                 SimpleResponse deployModel = Helpers.Serializers.DeserializeJson<SimpleResponse>(deployJson);
