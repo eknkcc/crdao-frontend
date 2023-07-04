@@ -10,3 +10,5 @@
 /DAO_WebPortal/Properties
 /DAO_WebPortal/appsettings.Production.json
 /DAO_WebPortal/appsettings.tests.json
+/CasperChainMethodsTest/bin/Debug/net6.0
+/CasperChainMethodsTest/obj
